@@ -1,7 +1,5 @@
 #ifndef LEXER_H
-#define FUNCTIONS_H
-
-
+#define LEXER_H
 
 
 typedef enum {

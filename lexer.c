@@ -7,6 +7,10 @@
 Lexer * initLexer(char *source){
 
     Lexer *lexer = malloc(sizeof(Lexer));
+      if (!lexer) {
+        perror("Memory allocation failed for lexer");
+        exit(EXIT_FAILURE);
+    }
     lexer->source = source;
     lexer->currPosition = -1;
     lexer->currChar = ' ';

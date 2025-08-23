@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include"lexer.h"
+#include "parser.h"
 
 
 void main(int argc,char *argv[]){
@@ -36,13 +37,15 @@ void main(int argc,char *argv[]){
     fclose(inputfile);
 
     Lexer *lexer = initLexer(source);
-    Token *token;
-    while((token = getToken(lexer))->type !=EOFL){
-        printf("%s %d\n", token->tokenText,token->type);
+    Parser *parser = initParser(lexer);
+    program(parser);
+    // Token *token;
+    // while((token = getToken(lexer))->type !=EOFL){
+    //     printf("%s %d\n", token->tokenText,token->type);
         
-        nextChar(lexer);
-        // printf("%c",lexer->currChar);
-    }
+    //     nextChar(lexer);
+    //     // printf("%c",lexer->currChar);
+    // }
     
 
 }

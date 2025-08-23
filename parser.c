@@ -81,3 +81,45 @@ char* token_type_to_string(TokenType type){
 bool checkPeek(Parser *parser,TokenType tokenType){
      return parser->next_token->type == tokenType;
 }
+
+
+void program(Parser *parser){
+    printf("PROGRAM");
+     while (checkToken(parser, NEWLINE)) {
+        nextToken(parser);
+    }
+    while (!checkToken(parser,EOF))
+    {
+        statement(parser);
+    }
+    
+}
+
+void parser_nl(Parser *parser){
+
+    match(parser,NEWLINE);
+    while(checkToken(parser,NEWLINE)){
+        nextToken(parser);
+    }
+}
+
+void statement(Parser *parser){
+    printf("STATEMENT");
+    if(checkToken(parser,PRINT)){
+        nextToken(parser);
+
+        if(checkToken(parser,STRING)){
+            nextToken(parser);
+        }else{
+            expression(parser);
+        }
+
+        parser_nl(parser);
+    }
+}
+
+void expression(Parser *parser){
+
+}
+
+
