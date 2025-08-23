@@ -7,11 +7,17 @@
 Lexer * initLexer(char *source){
 
     Lexer *lexer = malloc(sizeof(Lexer));
-      if (!lexer) {
-        perror("Memory allocation failed for lexer");
+    size_t len = strlen(source);
+    char *newSource = (char*)malloc(len + 2); 
+    if (!newSource) {
+        perror("Memory allocation failed");
         exit(EXIT_FAILURE);
     }
-    lexer->source = source;
+    strcpy(newSource, source);
+    newSource[len] = '\n';
+    newSource[len + 1] = '\0';
+
+    lexer->source = newSource;
     lexer->currPosition = -1;
     lexer->currChar = ' ';
     nextChar(lexer);  /// intialize currChar 
@@ -177,6 +183,7 @@ Token* getToken(Lexer *lexer){
             lexer_abort("invalid symbol");
         }
 
+        nextChar(lexer);
 
         return token;
         

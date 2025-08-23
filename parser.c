@@ -43,8 +43,8 @@ char* token_type_to_string(TokenType type){
 
     switch (type)
     {
-    case EOF:
-        return "EOF";
+    case EOFL:
+        return "EOFL";
     case NEWLINE: return "NEWLINE";
         case NUMBER: return "NUMBER";
         case IDENT: return "IDENT";
@@ -88,7 +88,7 @@ void program(Parser *parser){
      while (checkToken(parser, NEWLINE)) {
         nextToken(parser);
     }
-    while (!checkToken(parser,EOF))
+    while (!checkToken(parser,EOFL))
     {
         statement(parser);
     }
