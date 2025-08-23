@@ -5,7 +5,7 @@
 
 void main(){
     // char *source = "+- */";
-    char *source =  "+- */ >>= = !=";
+    char *source =  "IF+-123 foo*THEN/";
     Lexer *lexer = initLexer(source);
     // char c;
     // while ((c = (int)nextChar(lexer))!=-1)
@@ -17,6 +17,7 @@ void main(){
         printf("%s %d\n", token->tokenText,token->type);
         
         nextChar(lexer);
+        // printf("%c",lexer->currChar);
     }
     
 

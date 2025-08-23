@@ -64,72 +64,75 @@ Token* getToken(Lexer *lexer){
            if(peek(lexer) == '='){
                 char currText[3] = {lexer->currChar,peek(lexer),'\0'};
                 nextChar(lexer);
-                createToken(currText,EQEQ);
+                token = createToken(currText,EQEQ);
            }else{
-            createToken("=",EQ);
+                token = createToken("=",EQ);
            }
         }
         else if(text == '>'){
             if(peek(lexer) == '='){
                 char currText[3] = {lexer->currChar,peek(lexer),'\0'};
                 nextChar(lexer);
-                createToken(currText,GTEQ);
+                token = createToken(currText,GTEQ);
            }else{
-            createToken(">",GT);
+                token = createToken(">",GT);
            }
         }
         else if(text == '<'){
             if(peek(lexer) == '='){
                 char currText[3] = {lexer->currChar,peek(lexer),'\0'};
                 nextChar(lexer);
-                createToken(currText,LTEQ);
+                token = createToken(currText,LTEQ);
            }else{
-            createToken("<",LT);
+                token = createToken("<",LT);
            }
         }
         else if(text == '!'){
             if(peek(lexer) == '='){
                 char currText[3] = {lexer->currChar,peek(lexer),'\0'};
                 nextChar(lexer);
-                createToken(currText,NOTEQ);
+                token = createToken(currText,NOTEQ);
            }else{
                 lexer_abort("Expected !=, got !");
            }
         }
         else if(isdigit(lexer->currChar)){
             int startPos = lexer->currPosition;
-            nextChar(lexer);
-            while(isdigit(lexer->currChar)){
+            
+            while(isdigit(peek(lexer))){
                 nextChar(lexer);
             }
-            if(lexer->currChar == '.'){
+            if(peek(lexer) == '.'){
                 nextChar(lexer);
-                if(!isdigit(lexer->currChar)){
+                if(!isdigit(peek(lexer))){
                     //error
                     lexer_abort( "Illegal character in number");
                 }
-                while(isdigit(lexer->currChar)){
+                while(isdigit(peek(lexer))){
                     nextChar(lexer);
                 }
             }
-             int strLen = lexer->currPosition - startPos;
+             int strLen = lexer->currPosition - startPos + 1;
             char *strText = (char *)malloc(strLen + 1);
             if(!strText){
                 lexer_abort("Memory allocation failed"); 
             }
             strncpy(strText,lexer->source + startPos, strLen);
             strText[strLen] = '\0';
+            // printf("%s",strText);
             token = createToken(strText,NUMBER);
+            // printf("%s %d\n", token->tokenText,token->type);
             free(strText);
+
 
         }
         else if(isalpha(lexer->currChar)){
             int startPos = lexer->currPosition;
-            nextChar(lexer);
-            while(isalnum(lexer->currChar)){
+            // nextChar(lexer);
+            while(isalnum(peek(lexer))){
                 nextChar(lexer);
             }
-            int strLen = lexer->currPosition - startPos;
+            int strLen = lexer->currPosition - startPos +1;
             char *strText = (char *)malloc(strLen + 1);
             if(!strText){
                 lexer_abort("Memory allocation failed"); 
@@ -138,7 +141,7 @@ Token* getToken(Lexer *lexer){
             strText[strLen] = '\0';
             
             TokenType tokenType =  checkIfkeyWord(strText);
-            createToken(strText,tokenType);
+            token = createToken(strText,tokenType);
            
             free(strText);
         }
@@ -169,6 +172,9 @@ Token* getToken(Lexer *lexer){
         else{
             lexer_abort("invalid symbol");
         }
+
+
+        return token;
         
       
 }
