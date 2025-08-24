@@ -32,4 +32,16 @@ char* token_type_to_string(TokenType type);
 
 void expression(Parser* parser);
 
+void parser_abort(Parser *parser, const char *message);
+
+void comparison(Parser *parser);
+
+bool isComparisonOperator(Parser *parser);
+
+void term(Parser *parser);
+
+void unary(Parser *parser);
+
+void primary(Parser *parser);
+
 #endif

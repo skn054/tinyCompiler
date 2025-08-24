@@ -7,17 +7,17 @@
 Lexer * initLexer(char *source){
 
     Lexer *lexer = malloc(sizeof(Lexer));
-    size_t len = strlen(source);
-    char *newSource = (char*)malloc(len + 2); 
-    if (!newSource) {
-        perror("Memory allocation failed");
-        exit(EXIT_FAILURE);
-    }
-    strcpy(newSource, source);
-    newSource[len] = '\n';
-    newSource[len + 1] = '\0';
+    // size_t len = strlen(source);
+    // char *newSource = (char*)malloc(len + 2); 
+    // if (!newSource) {
+    //     perror("Memory allocation failed");
+    //     exit(EXIT_FAILURE);
+    // }
+    // strcpy(newSource, source);
+    // newSource[len] = '\n';
+    // newSource[len + 1] = '\0';
 
-    lexer->source = newSource;
+    lexer->source = source;
     lexer->currPosition = -1;
     lexer->currChar = ' ';
     nextChar(lexer);  /// intialize currChar 
@@ -37,12 +37,14 @@ char nextChar(Lexer *lexer){
 
 Token* createToken(char *tokenText,TokenType type){
     Token *token = malloc(sizeof(Token));
+     if (!token) lexer_abort("Malloc failed for token.");
     token->tokenText = strdup(tokenText);
+    if (!token->tokenText) lexer_abort("strdup failed for token text.");
     token->type = type;
     return token;
 }
 
-
+/** 
 
 Token* getToken(Lexer *lexer){
         skipWhiteSpaces(lexer);
@@ -189,6 +191,153 @@ Token* getToken(Lexer *lexer){
         
       
 }
+
+*/
+
+// FILE: lexer.c
+
+Token* getToken(Lexer *lexer){
+    skipWhiteSpaces(lexer);
+    skipComments(lexer);
+
+    Token *token = NULL;
+    char text = lexer->currChar;
+
+    if(text == '+'){
+        token = createToken("+", PLUS);
+        nextChar(lexer);
+    }
+    else if(text == '-'){
+        token = createToken("-", MINUS);
+        nextChar(lexer);
+    }
+    else if(text == '*'){
+        token = createToken("*", ASTERISK);
+        nextChar(lexer);
+    }
+    else if(text == '/'){
+        token = createToken("/", SLASH);
+        nextChar(lexer);
+    }
+    else if (text == '\n'){
+       token = createToken("\\n", NEWLINE);
+       nextChar(lexer);
+    }
+    else if(text == '\0'){
+        token = createToken("\0", EOFL);
+        
+    }
+    else if (text == '='){
+       if(peek(lexer) == '='){
+            nextChar(lexer);
+            token = createToken("==", EQEQ);
+       }else{
+            token = createToken("=", EQ);
+       }
+       nextChar(lexer);
+    }
+    else if (text == '>') {
+        if (peek(lexer) == '=') {
+            char text[3] = {lexer->currChar, peek(lexer), '\0'};
+            nextChar(lexer);
+            token = createToken(text, GTEQ);
+        } else {
+            token = createToken(">", GT);
+        }
+        nextChar(lexer);
+    }
+    else if (text == '<') { 
+      if(peek(lexer) == '='){
+          char text[3] = {lexer->currChar, peek(lexer), '\0'};
+           nextChar(lexer);
+           token = createToken(text, LTEQ);
+
+      } else{
+           token = createToken("<", LT);
+      }
+      nextChar(lexer);
+    }
+     else if(text == '!'){
+        if(peek(lexer) == '='){
+              char text[3] = {lexer->currChar, peek(lexer), '\0'};
+               nextChar(lexer);
+             token = createToken(text, NOTEQ);
+
+        } else{
+             lexer_abort("Expected !=, got !");
+
+        }
+        nextChar(lexer);
+    }
+    
+    else if(isalpha(text)){
+        int startPos = lexer->currPosition;
+        while(isalnum(peek(lexer))){
+            nextChar(lexer);
+        }
+        int strLen = lexer->currPosition - startPos + 1;
+        char *strText = (char *)malloc(strLen + 1);
+        if(!strText) lexer_abort("Memory allocation failed"); 
+        strncpy(strText, lexer->source + startPos, strLen);
+        strText[strLen] = '\0';
+        
+        TokenType tokenType = checkIfkeyWord(strText);
+        token = createToken(strText, tokenType);
+        free(strText);
+        nextChar(lexer); // Consume the last char of the identifier
+    }
+    else if(text == '"'){
+        nextChar(lexer); // Consume opening "
+        int startPos = lexer->currPosition;
+        while(lexer->currChar != '"'){
+            if (lexer->currChar == '\0') {
+               lexer_abort("Unterminated string.");
+            }
+            nextChar(lexer);
+        }
+        int strLen = lexer->currPosition - startPos;
+        char *strText = (char *)malloc(strLen + 1);
+        if(!strText) lexer_abort("Memory allocation failed"); 
+        strncpy(strText, lexer->source + startPos, strLen);
+        strText[strLen] = '\0';
+        token = createToken(strText, STRING);
+        free(strText);
+        nextChar(lexer); // Consume closing "
+    }
+    else if(isdigit(text)){
+        int startPos = lexer->currPosition;
+        while(isdigit(peek(lexer))){
+            nextChar(lexer);
+        }
+        if(peek(lexer) == '.'){
+            nextChar(lexer);
+            if(!isdigit(peek(lexer))){
+                lexer_abort("Illegal character in number");
+            }
+            while(isdigit(peek(lexer))){
+                nextChar(lexer);
+            }
+        }
+        int strLen = lexer->currPosition - startPos + 1;
+        char *strText = (char *)malloc(strLen + 1);
+        if(!strText) lexer_abort("Memory allocation failed"); 
+        strncpy(strText, lexer->source + startPos, strLen);
+        strText[strLen] = '\0';
+        token = createToken(strText, NUMBER);
+        free(strText);
+        nextChar(lexer); // Consume the last char of the number
+    }
+    else {
+        char err[28];
+        sprintf(err, "Unknown token character: %c", text);
+        lexer_abort(err);
+    }
+
+    
+
+    return token;
+}
+
 
 TokenType checkIfkeyWord(char* text){
     const char *keywords[] = {

@@ -33,7 +33,7 @@ void main(int argc,char *argv[]){
         exit(1);
     }
     fread(source,1,file_size,inputfile);
-    source[file_size] ='\0';
+    source[file_size] = '\0';
     fclose(inputfile);
 
     Lexer *lexer = initLexer(source);

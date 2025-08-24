@@ -21,7 +21,7 @@ Parser* initParser(Lexer *lexer){
 }
 
 Token* nextToken(Parser *parser){
-
+   
     parser->current_token = parser->next_token;
     parser->next_token = getToken(parser->lexer);
 
@@ -84,42 +84,184 @@ bool checkPeek(Parser *parser,TokenType tokenType){
 
 
 void program(Parser *parser){
-    printf("PROGRAM");
+    printf("PROGRAM\n");
      while (checkToken(parser, NEWLINE)) {
         nextToken(parser);
     }
     while (!checkToken(parser,EOFL))
     {
         statement(parser);
+        // printf("Token after statement is: %s\n", token_type_to_string(parser->current_token->type));
     }
     
 }
 
 void parser_nl(Parser *parser){
-
+    printf("NEWLINE\n");
     match(parser,NEWLINE);
     while(checkToken(parser,NEWLINE)){
         nextToken(parser);
     }
 }
 
+void parser_abort(Parser *parser, const char *message) {
+            fprintf(stderr, "Parsing Error: %s. Got token type %s with text '%s'\n", 
+            message, 
+            token_type_to_string(parser->current_token->type),
+            parser->current_token->tokenText);
+    exit(EXIT_FAILURE);
+}
+
 void statement(Parser *parser){
-    printf("STATEMENT");
+    printf("STATEMENT\n");
     if(checkToken(parser,PRINT)){
+        printf("STATEMENT-PRINT\n");
         nextToken(parser);
 
         if(checkToken(parser,STRING)){
             nextToken(parser);
         }else{
             expression(parser);
+        }       
+    }
+    else if(checkToken(parser,IF)){
+        printf("STATEMENT-IF\n");
+        nextToken(parser);
+        comparison(parser);
+        
+        match(parser,THEN);
+        parser_nl(parser);
+
+        while (!checkToken(parser,ENDIF))
+        {
+            statement(parser);
+        }
+        
+        match(parser,ENDIF);
+        
+    }
+    else if(checkToken(parser,WHILE)){
+        printf("STATEMENT-WHILE\n");
+        nextToken(parser);
+        
+        comparison(parser);
+
+        match(parser,REPEAT);
+        parser_nl(parser);
+
+        while (!checkToken(parser,ENDWHILE))
+        {
+            statement(parser);
         }
 
-        parser_nl(parser);
+        match(parser,ENDWHILE);
+        
     }
+    else if(checkToken(parser,LABEL)){
+        printf("STATEMENT-LABEL\n");
+        nextToken(parser);
+        match(parser,IDENT);
+
+    }
+     else if(checkToken(parser,GOTO)){
+        printf("STATEMENT-GOTO\n");
+        nextToken(parser);
+        match(parser,IDENT);
+        
+    }
+    else if(checkToken(parser,INPUT)){
+        printf("STATEMENT-INPUT\n");
+        nextToken(parser);
+        match(parser,IDENT);
+        
+    }
+    else if(checkToken(parser,LET)){
+        printf("STATEMENT-LET\n");
+        nextToken(parser);
+        match(parser,IDENT);
+        match(parser,EQ);
+        expression(parser);     
+    }
+
+    else{
+        parser_abort(parser, "Invalid statement");
+    }
+
+    parser_nl(parser);
+}
+
+
+
+void comparison(Parser *parser){
+
+    printf("comparison");
+    expression(parser);
+    
+    if(isComparisonOperator(parser)){
+        nextToken(parser);
+        expression(parser);
+    }else{
+        char error_message[100];
+        snprintf(error_message, sizeof(error_message), "Expected comparison operator at: : %s", parser->current_token->tokenText);
+        parser_abort(parser,error_message);
+        
+    }
+
+    while(isComparisonOperator(parser)){
+        nextToken(parser);
+        expression(parser);
+    }
+
 }
 
 void expression(Parser *parser){
+    printf("EXPRESSION\n");
+    term(parser);
 
+    while (checkToken(parser,MINUS)|| checkToken(parser,PLUS))
+    {   nextToken(parser);
+        term(parser);
+    }
+    
+}
+
+void term(Parser *parser){
+    printf("TERM\n");
+    unary(parser);
+    while(checkToken(parser,SLASH)|| checkToken(parser,ASTERISK)){
+        nextToken(parser);
+        unary(parser);
+    }
+}
+
+void unary(Parser *parser){
+    printf("UNARY\n");
+    if(checkToken(parser,PLUS)|| checkToken(parser,MINUS)){
+        nextToken(parser);
+        
+    }
+    primary(parser);
+
+}
+
+void primary(Parser *parser){
+    printf("PRIMARY %s \n", parser->current_token->tokenText);
+    if(checkToken(parser,NUMBER)|| checkToken(parser,IDENT)){
+        nextToken(parser);
+    }else{
+        char error_message[100];
+        snprintf(error_message, sizeof(error_message), "Unexpected token at: %s", parser->lexer->currPosition);
+        parser_abort(parser,error_message);
+    }
+}
+
+bool isComparisonOperator(Parser *parser){
+    
+    if(checkToken(parser,EQEQ)|| checkToken(parser,NOTEQ)|| checkToken(parser,GT)|| checkToken(parser,GTEQ)||checkToken(parser,LT)|| checkToken(parser,LTEQ)){
+        return true;
+
+    }
+    return false;
 }
 
 
