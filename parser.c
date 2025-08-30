@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include "lexer.h"
 #include "parser.h"
+#include "hashset.h"
 
 
 Parser* initParser(Lexer *lexer){
@@ -17,6 +18,9 @@ Parser* initParser(Lexer *lexer){
     parser->next_token = NULL;
     nextToken(parser);
     nextToken(parser);
+    parser->symbols = create_set();
+    parser->labels_decalred = create_set();
+    parser->labels_gotoed = create_set();   
     return parser;
 }
 
@@ -93,6 +97,18 @@ void program(Parser *parser){
         statement(parser);
         // printf("Token after statement is: %s\n", token_type_to_string(parser->current_token->type));
     }
+
+    // check if labels_decalred and gotoed match
+    for(int i=0;i<SIZE;i++){
+        Node *node = parser->labels_gotoed->values[i];
+        if(!search(parser->labels_decalred,node->value)){
+            // error;
+            char error_message[100];
+             snprintf(error_message, sizeof(error_message), "Attempting to GOTO to undeclared label:  : %s", node->value);
+             parser_abort(parser,error_message);
+            
+        }
+    }
     
 }
 
@@ -160,25 +176,40 @@ void statement(Parser *parser){
     else if(checkToken(parser,LABEL)){
         printf("STATEMENT-LABEL\n");
         nextToken(parser);
+        if(search(parser->labels_decalred,parser->current_token->tokenText)){
+            char error_message[100];
+            snprintf(error_message, sizeof(error_message), "Label already exists  : %s", parser->current_token->tokenText);
+            parser_abort(parser,error_message);
+        }else{
+           insert(parser->labels_decalred,parser->current_token->tokenText);
+        }
         match(parser,IDENT);
 
     }
      else if(checkToken(parser,GOTO)){
         printf("STATEMENT-GOTO\n");
         nextToken(parser);
+        insert(parser->labels_gotoed,parser->current_token->tokenText);
         match(parser,IDENT);
         
     }
     else if(checkToken(parser,INPUT)){
         printf("STATEMENT-INPUT\n");
         nextToken(parser);
+        if(!search(parser->symbols,parser->current_token->tokenText)){
+            insert(parser->symbols,parser->current_token->tokenText);
+        }
         match(parser,IDENT);
         
     }
     else if(checkToken(parser,LET)){
         printf("STATEMENT-LET\n");
         nextToken(parser);
+        if(!search(parser->symbols,parser->current_token->tokenText)){
+            insert(parser->symbols,parser->current_token->tokenText);
+        }
         match(parser,IDENT);
+        
         match(parser,EQ);
         expression(parser);     
     }
@@ -246,9 +277,18 @@ void unary(Parser *parser){
 
 void primary(Parser *parser){
     printf("PRIMARY %s \n", parser->current_token->tokenText);
-    if(checkToken(parser,NUMBER)|| checkToken(parser,IDENT)){
+    if(checkToken(parser,NUMBER)){
         nextToken(parser);
-    }else{
+    }else if(checkToken(parser,IDENT)){
+        if(!search(parser->symbols,parser->current_token->tokenText)){
+            // throw error.
+            char error_message[100];
+            snprintf(error_message, sizeof(error_message), "Referencing variable before assignment: %s", parser->current_token->tokenText);
+            parser_abort(parser,error_message);
+        }
+        nextToken(parser);
+    }
+    else{
         char error_message[100];
         snprintf(error_message, sizeof(error_message), "Unexpected token at: %s", parser->lexer->currPosition);
         parser_abort(parser,error_message);

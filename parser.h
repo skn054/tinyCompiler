@@ -1,6 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 #include "lexer.h"
+#include "hashset.h"
 #include <stdbool.h> // for bool types
 
 typedef struct{
@@ -8,6 +9,9 @@ typedef struct{
     Lexer *lexer;
     Token *current_token;
     Token *next_token;
+    Set *symbols;
+    Set *labels_decalred;
+    Set *labels_gotoed;
 
 }Parser;
 

@@ -6,10 +6,10 @@
 #include <stdbool.h>
 #define SIZE 251
 
-typedef struct{
+typedef struct Node{
 
     char *value;
-    Node* next;
+    struct Node* next;
 
 }Node;
 

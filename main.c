@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include"lexer.h"
 #include "parser.h"
+#include "hashset.h"
 
 
 void main(int argc,char *argv[]){
@@ -35,7 +36,7 @@ void main(int argc,char *argv[]){
     fread(source,1,file_size,inputfile);
     source[file_size] = '\0';
     fclose(inputfile);
-
+    
     Lexer *lexer = initLexer(source);
     Parser *parser = initParser(lexer);
     program(parser);
